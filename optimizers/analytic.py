@@ -8,9 +8,7 @@ class AnalyticSolver(BaseOptimizer):
         self.reset_history()
 
         if X.shape[1] != 2:
-            raise ValueError(
-                "Analytic solution implemented only for linear regression"
-            )
+            raise ValueError("Analytic solution implemented only for linear regression")
 
         x = X[:, 1]
 
