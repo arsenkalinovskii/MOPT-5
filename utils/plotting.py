@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_dataset(X, y, y_true=None, title=None):
+def plot_dataset(X, y, filename, y_true=None, title=None):
     plt.figure(figsize=(8, 5))
 
     plt.scatter(X, y, label="Noisy data")
@@ -15,10 +15,12 @@ def plot_dataset(X, y, y_true=None, title=None):
 
     plt.legend()
     plt.grid()
-    plt.show()
+
+    plt.savefig(filename, bbox_inches="tight")
+    plt.close()
 
 
-def plot_regression(model, X, y, y_true=None, title=None):
+def plot_regression(model, X, y, filename, y_true=None, title=None):
     plt.figure(figsize=(8, 5))
 
     plt.scatter(X, y, label="Data")
@@ -36,10 +38,12 @@ def plot_regression(model, X, y, y_true=None, title=None):
 
     plt.legend()
     plt.grid()
-    plt.show()
+
+    plt.savefig(filename, bbox_inches="tight")
+    plt.close()
 
 
-def plot_loss(history, title=None):
+def plot_loss(history, filename, title=None):
     plt.figure(figsize=(8, 5))
 
     plt.plot(history["loss"], label="Loss")
@@ -52,10 +56,12 @@ def plot_loss(history, title=None):
 
     plt.legend()
     plt.grid()
-    plt.show()
+
+    plt.savefig(filename, bbox_inches="tight")
+    plt.close()
 
 
-def plot_loss_components(history, title=None):
+def plot_loss_components(history, filename, title=None):
     plt.figure(figsize=(8, 5))
 
     plt.plot(history["loss"], label="Loss")
@@ -71,10 +77,12 @@ def plot_loss_components(history, title=None):
 
     plt.legend()
     plt.grid()
-    plt.show()
+
+    plt.savefig(filename, bbox_inches="tight")
+    plt.close()
 
 
-def plot_methods(histories, metric="loss", title=None):
+def plot_methods(histories, filename, metric="loss", title=None):
     plt.figure(figsize=(8, 5))
 
     for name, history in histories.items():
@@ -88,19 +96,26 @@ def plot_methods(histories, metric="loss", title=None):
 
     plt.legend()
     plt.grid()
-    plt.show()
+
+    plt.savefig(filename, bbox_inches="tight")
+    plt.close()
 
 
-def plot_batch_experiment(results):
+def plot_batch_experiment(results, filename, title=None):
     plt.figure(figsize=(8, 5))
 
     for batch_size, history in results.items():
         x = np.arange(len(history["loss"]))
         plt.plot(x, history["loss"], label=f"batch={batch_size}")
 
+    if title:
+        plt.title(title)
+
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
 
     plt.legend()
     plt.grid()
-    plt.show()
+
+    plt.savefig(filename, bbox_inches="tight")
+    plt.close()

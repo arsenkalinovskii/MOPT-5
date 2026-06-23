@@ -1,4 +1,4 @@
-from polynomial_regression import PolynomialRegression
+from .polynomial_regression import PolynomialRegression
 
 
 class LinearRegression(PolynomialRegression):

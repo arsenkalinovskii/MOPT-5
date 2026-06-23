@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from base_optimizer import BaseOptimizer
+from .base_optimizer import BaseOptimizer
 
 
 class MiniBatchGD(BaseOptimizer):
@@ -15,12 +15,12 @@ class MiniBatchGD(BaseOptimizer):
         self.tol = tol
         self.random_state = random_state
 
-    def fit(self, model, loss_fn, X, y):
+    def fit(self, model, loss_fn, Phi, y):
         self.reset_history()
 
         rng = np.random.default_rng(self.random_state)
         start_time = time.perf_counter()
-        n = len(X)
+        n = len(Phi)
 
         for epoch in range(self.epochs):
             indices = rng.permutation(n)
@@ -28,14 +28,14 @@ class MiniBatchGD(BaseOptimizer):
             for batch_start in range(0, n, self.batch_size):
                 batch_idx = indices[batch_start: batch_start + self.batch_size]
 
-                Xb = X[batch_idx]
+                Xb = Phi[batch_idx]
                 yb = y[batch_idx]
 
                 grad = loss_fn.gradient(model.weights, Xb, yb)
                 model.weights -= self.lr * grad
 
             elapsed = time.perf_counter() - start_time
-            self.log_step(model, loss_fn, X, y, elapsed)
+            self.log_step(model, loss_fn, Phi, y, elapsed)
 
             if np.linalg.norm(grad) < self.tol:
                 break

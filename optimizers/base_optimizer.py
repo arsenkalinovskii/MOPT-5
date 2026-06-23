@@ -8,15 +8,15 @@ class BaseOptimizer(ABC):
             "risk": [],
             "l1": [],
             "l2": [],
-            "time": [],
+            "time": []
         }
 
     def reset_history(self):
         for key in self.history:
             self.history[key] = []
 
-    def log_step(self, model, loss_fn, X, y, elapsed):
-        metrics = loss_fn.evaluate(model.weights, X, y)
+    def log_step(self, model, loss_fn, Phi, y, elapsed):
+        metrics = loss_fn.evaluate(model.weights, Phi, y)
 
         self.history["loss"].append(metrics["loss"])
         self.history["risk"].append(metrics["risk"])
@@ -25,5 +25,5 @@ class BaseOptimizer(ABC):
         self.history["time"].append(elapsed)
 
     @abstractmethod
-    def fit(self, model, loss_fn, X, y):
+    def fit(self, model, loss_fn, Phi, y):
         pass
