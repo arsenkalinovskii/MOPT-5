@@ -60,7 +60,6 @@ def task1():
             ("poly4", PolynomialRegression(4)),
             ("poly5", PolynomialRegression(5))
         ]
-        loss_histories = {}
 
         for model_name, model in models:
             model.initialize_weights()
@@ -88,6 +87,29 @@ def task1():
                 start_time = time.perf_counter()
                 current_model, history = optimizer.fit(current_model, loss_fn, Phi, y)
 
+                if model_name == "poly5" and optimizer_name != "Analytic":
+                    plot_loss(
+                        history,
+                        os.path.join(
+                            result_dir,
+                            f"loss_{optimizer_name.lower()}_{dataset_name}.png"
+                        ),
+                        title=f"{optimizer_name} ({dataset_name})"
+                    )
+
+                if model_name == "poly5":
+                    plot_regression(
+                        current_model,
+                        X,
+                        y,
+                        os.path.join(
+                            result_dir,
+                            f"poly5_{dataset_name}_{optimizer_name.lower()}.png"
+                        ),
+                        y_true=y_true,
+                        title=f"Poly5 + {optimizer_name} ({dataset_name})"
+                    )
+
                 elapsed = time.perf_counter() - start_time
                 metrics = evaluate_regression(current_model, X, y)
                 final_loss = history["loss"][-1]
@@ -99,14 +121,8 @@ def task1():
                     "loss": final_loss,
                     "iterations": len(history["loss"]),
                     "time": elapsed,
-                    "mse": metrics["MSE"],
-                    "rmse": metrics["RMSE"],
-                    "mae": metrics["MAE"],
                     "r2": metrics["R2"]
                 })
-
-                if model_name == "poly5":
-                    loss_histories[optimizer_name] = history
 
                 if final_loss < best_loss:
                     best_loss = final_loss
@@ -121,15 +137,63 @@ def task1():
                 title=f"{model_name} ({dataset_name})"
             )
 
-        plot_methods(
-            loss_histories,
-            os.path.join(result_dir, f"loss_{dataset_name}_function.png"),
-            metric="loss",
-            title=f"Loss comparison ({dataset_name})"
-        )
-
     results_df = pd.DataFrame(results)
     results_df.to_csv(os.path.join(result_dir, "results.csv"), index=False)
+
+    for dataset_name in ["linear", "nonlinear"]:
+        dataset_df = results_df[results_df["dataset"] == dataset_name].copy()
+        labels = dataset_df["model"] + "\n" + dataset_df["optimizer"]
+
+        plt.figure(figsize=(14, 6))
+        plt.bar(np.arange(len(dataset_df)), dataset_df["loss"])
+        plt.xticks(np.arange(len(dataset_df)), labels, rotation=90)
+        plt.ylabel("Loss")
+        plt.title(f"Loss comparison ({dataset_name})")
+
+        min_val = dataset_df["loss"].min()
+        max_val = dataset_df["loss"].max()
+        margin = (max_val - min_val) * 0.1 if max_val > min_val else 0.1
+        plt.ylim(min_val - margin, max_val + margin)
+
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(result_dir, f"loss_comparison_{dataset_name}.png"),
+            bbox_inches="tight"
+        )
+        plt.close()
+
+        plt.figure(figsize=(14, 6))
+        plt.bar(np.arange(len(dataset_df)), dataset_df["r2"])
+        plt.xticks(np.arange(len(dataset_df)), labels, rotation=90)
+        plt.ylabel("R2")
+        plt.title(f"R2 comparison ({dataset_name})")
+
+        min_val = dataset_df["r2"].min()
+        max_val = dataset_df["r2"].max()
+        margin = (max_val - min_val) * 0.1 if max_val > min_val else 0.1
+        plt.ylim(min_val - margin, max_val + margin)
+
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(result_dir, f"r2_comparison_{dataset_name}.png"),
+            bbox_inches="tight"
+        )
+        plt.close()
+
+    optimizer_summary = (
+        results_df
+        .groupby("optimizer")
+        .agg({
+            "loss": "mean",
+            "iterations": "mean",
+            "time": "mean"
+        })
+        .round(4)
+    )
+
+    optimizer_summary.to_csv(
+        os.path.join(result_dir, "optimizer_summary.csv")
+    )
 
     summary_df = (
         results_df
@@ -138,7 +202,6 @@ def task1():
             "loss": "mean",
             "iterations": "mean",
             "time": "mean",
-            "mse": "mean",
             "r2": "mean"
         })
         .reset_index()
@@ -150,7 +213,6 @@ def task1():
     )
 
     print("Task 1 completed.")
-
 
 
 if __name__ == "__main__":
