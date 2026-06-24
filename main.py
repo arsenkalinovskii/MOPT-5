@@ -302,7 +302,100 @@ def task2():
 
 
 def task3():
-    pass
+    result_dir = "task3"
+    os.makedirs(result_dir, exist_ok=True)
+
+    X, y, y_true = generate_dataset(nonlinear_function, n=50, noise_std=1.5)
+
+    trained_models = {}
+
+    degree = 10
+    model = PolynomialRegression(degree)
+    model.initialize_weights()
+    Phi = model.design_matrix(X)
+
+    hyper_params = dict(lr=0.05, batch_size=4, epochs=1000)
+    optimizer = MiniBatchGD(**hyper_params)
+    loss_fn = MSELoss(regularization=NoRegularization())
+    model, history = optimizer.fit(model, loss_fn, Phi, y)
+
+    trained_models["Without regularization"] = model
+
+    params = [0.002, 0.02, 0.2]
+
+    configs = [
+        *((idx, "L1", L1Regularization(i)) for idx, i in enumerate(params)),
+        *((idx, "L2", L2Regularization(i)) for idx, i in enumerate(params)),
+        *((idx, "ElasticNet", ElasticNetRegularization(i, i)) for idx, i in enumerate(params))
+    ]
+
+    for idx, reg_name, regularization in configs:
+        model = PolynomialRegression(degree)
+        model.initialize_weights()
+
+        optimizer = MiniBatchGD(**hyper_params)
+        loss_fn = MSELoss(regularization=regularization)
+        model, history = optimizer.fit(model, loss_fn, Phi, y)
+
+        if reg_name == "ElasticNet":
+            suffix = f"l1={regularization.lam1};l2={regularization.lam2}"
+        else:
+            suffix = 'l=' + str(regularization.lam)
+
+        trained_models[reg_name + '_' + suffix] = model
+
+        plt.figure(figsize=(10, 6))
+        width = 3
+        plt.plot(history["loss"], label="Total loss", linewidth=width)
+        plt.plot(history["risk"], label="Risk", linewidth=width)
+
+        if reg_name == "L1":
+            plt.plot(history["l1"], label="L1 penalty", linewidth=width)
+        elif reg_name == "L2":
+            plt.plot(history["l2"], label="L2 penalty", linewidth=width)
+        else:
+            plt.plot(history["l1"], label="L1 part", linewidth=width)
+            plt.plot(history["l2"], label="L2 part", linewidth=width)
+
+        plt.xlabel("Epoch")
+        plt.ylabel("Value")
+        plt.title(f"{reg_name}, {suffix}")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(os.path.join(result_dir, f"{reg_name}_{idx + 1}.png"))
+        plt.close()
+
+    without_regularization_data = {"Without regularization": trained_models["Without regularization"]}
+
+    plot_regularization_comparison(
+        without_regularization_data | {i: trained_models[i] for i in trained_models if 'L1' in i},
+        X,
+        y,
+        nonlinear_function,
+        os.path.join(result_dir, "l1_regularization.png"),
+        "L1 Regularization"
+    )
+
+    plot_regularization_comparison(
+        without_regularization_data | {i: trained_models[i] for i in trained_models if 'L2' in i},
+        X,
+        y,
+        nonlinear_function,
+        os.path.join(result_dir, "l2_regularization.png"),
+        "L2 Regularization"
+    )
+
+    plot_regularization_comparison(
+        without_regularization_data | {i: trained_models[i] for i in trained_models if 'ElasticNet' in i},
+        X,
+        y,
+        nonlinear_function,
+        os.path.join(result_dir, "elastic_net.png"),
+        "Elastic Net Regularization"
+    )
+
+    print("Task 3 completed.")
 
 
 def task4():
@@ -312,5 +405,5 @@ def task4():
 if __name__ == "__main__":
     # task1()
     # task2()
-    task2()
-    task2()
+    task3()
+    task4()

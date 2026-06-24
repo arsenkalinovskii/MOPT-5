@@ -119,3 +119,26 @@ def plot_batch_experiment(results, filename, title=None):
 
     plt.savefig(filename, bbox_inches="tight")
     plt.close()
+
+
+def plot_regularization_comparison(models, X, y, true_function, filename, title):
+    plt.figure(figsize=(10, 6))
+    x_plot = np.linspace(X.min(), X.max(), 400)
+    plt.scatter(X, y, label="Noisy data", s=20)
+    plt.plot(x_plot, true_function(x_plot), label="True function", linewidth=3)
+
+    for name, model in models.items():
+        Phi = model.design_matrix(x_plot)
+        prediction = Phi @ model.weights
+
+        plt.plot(x_plot, prediction, label=name, linewidth=2)
+
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()

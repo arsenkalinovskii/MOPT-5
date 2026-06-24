@@ -1,6 +1,6 @@
 optimizer,loss,iterations,time
-Analytic,0.4045,1.0,0.0365
-GaussNewton,0.4045,2.0,0.0831
-LevenbergMarquardt,0.4045,5.6,0.0794
-MiniBatch,0.497,500.0,0.1772
-SGD,0.4232,1000.0,1.9604
+Analytic,0.4045,1.0,0.023
+GaussNewton,0.4045,2.0,0.0449
+LevenbergMarquardt,0.4045,5.6,0.0449
+MiniBatch,0.497,500.0,0.1303
+SGD,0.4232,1000.0,1.1035
