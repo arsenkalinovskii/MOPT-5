@@ -215,5 +215,102 @@ def task1():
     print("Task 1 completed.")
 
 
+def task2():
+    result_dir = "task2"
+    os.makedirs(result_dir, exist_ok=True)
+
+    X, y, y_true = generate_dataset(nonlinear_function)
+    model_degree = 5
+    batch_sizes = [1, 4, 8, 16, 32, 64, len(X)]
+
+    histories = {}
+
+    for batch_size in batch_sizes:
+        model = PolynomialRegression(model_degree)
+        model.initialize_weights()
+
+        Phi = model.design_matrix(X)
+
+        optimizer = MiniBatchGD(lr=0.03, batch_size=batch_size, epochs=100)
+        loss_fn = MSELoss()
+
+        model, history = optimizer.fit(model, loss_fn, Phi, y)
+        histories[batch_size] = history
+
+        # loss по эпохам
+        plt.figure(figsize=(8, 5))
+        plt.plot(history["loss"])
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title(f"Batch size = {batch_size}")
+        plt.grid(True)
+
+        plt.tight_layout()
+        plt.savefig(os.path.join(result_dir, f"loss_epoch_batch_{batch_size}.png"))
+        plt.close()
+
+        # loss по вычислениям градиента
+        plt.figure(figsize=(8, 5))
+        plt.plot(history["grad_calls"], history["step_loss"])
+
+        plt.xlabel("Gradient evaluations")
+        plt.ylabel("Loss")
+        plt.title(f"Batch size = {batch_size}")
+        plt.grid(True)
+
+        plt.tight_layout()
+        plt.savefig(os.path.join(result_dir, f"loss_grad_batch_{batch_size}.png"))
+        plt.close()
+
+    plt.figure(figsize=(10, 6))
+
+    for batch_size, history in histories.items():
+        plt.plot(history["loss"], label=f"B={batch_size}")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Loss vs Epoch")
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(result_dir, "loss_epoch_comparison.png"))
+    plt.close()
+
+    plt.figure(figsize=(10, 6))
+
+    for batch_size, history in histories.items():
+        line = plt.plot(history["grad_calls"], history["step_loss"], label=f"B={batch_size}")
+        plt.plot(
+            history["grad_calls"][-1],
+            history["step_loss"][-1],
+            marker='o',
+            markersize=8,
+            color=line[0].get_color()
+        )
+
+    plt.xlabel("Gradient evaluations")
+    plt.ylabel("Loss")
+    plt.title("Loss vs Gradient Evaluations")
+    plt.ylim(top=1)  # Обрезаем график сверху по значению 1
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(result_dir, "loss_gradient_comparison.png"))
+    plt.close()
+
+    print("Task 2 completed.")
+
+
+def task3():
+    pass
+
+
+def task4():
+    pass
+
+
 if __name__ == "__main__":
-    task1()
+    # task1()
+    # task2()
+    task2()
+    task2()
