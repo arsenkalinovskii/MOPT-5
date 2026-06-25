@@ -43,5 +43,12 @@ class LevenbergMarquardt(BaseOptimizer):
 
             if np.linalg.norm(step) < self.tol:
                 break
+            if candidate_loss >= current_loss and np.linalg.norm(step) < self.tol:
+                break
+            if abs(current_loss - candidate_loss) < self.tol:
+                break
 
         return model, self.history
+
+    def __str__(self):
+        return self.__class__.__name__

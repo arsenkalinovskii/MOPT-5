@@ -24,7 +24,11 @@ class GaussNewton(BaseOptimizer):
 
             step = np.linalg.solve(A, b)
 
-            model.weights += step
+            current_loss = loss_fn.evaluate(model.weights, Phi, y)["loss"]
+            candidate_weights = model.weights + step
+            candidate_loss = loss_fn.evaluate(candidate_weights, Phi, y)["loss"]
+
+            model.weights = candidate_weights
 
             elapsed = time.perf_counter() - start_time
 
@@ -32,5 +36,12 @@ class GaussNewton(BaseOptimizer):
 
             if np.linalg.norm(step) < self.tol:
                 break
+            if candidate_loss >= current_loss and np.linalg.norm(step) < self.tol:
+                break
+            if abs(current_loss - candidate_loss) < self.tol:
+                break
 
         return model, self.history
+
+    def __str__(self):
+        return self.__class__.__name__

@@ -35,3 +35,6 @@ class SGD(BaseOptimizer):
             self.log_step(model, loss_fn, Phi, y, elapsed)
 
         return model, self.history
+
+    def __str__(self):
+        return self.__class__.__name__ + f"(lr={self.lr})"

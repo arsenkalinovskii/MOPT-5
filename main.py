@@ -395,15 +395,167 @@ def task3():
         "Elastic Net Regularization"
     )
 
+    coefficients = []
+    abs_coefficients = []
+
+    for name, model in trained_models.items():
+        weights = model.weights
+
+        row = {"model": name}
+        abs_row = {"model": name}
+
+        for i, w in enumerate(weights):
+            row[f"w_{i}"] = w
+            abs_row[f"|w_{i}|"] = abs(w)
+
+        coefficients.append(row)
+        abs_coefficients.append(abs_row)
+
+    pd.DataFrame(coefficients).to_csv(os.path.join(result_dir, "model_coefficients.csv"), index=False)
+    pd.DataFrame(abs_coefficients).to_csv(os.path.join(result_dir, "model_absolute_coefficients.csv"), index=False)
+
     print("Task 3 completed.")
 
 
 def task4():
-    pass
+    result_dir = "task4"
+    os.makedirs(result_dir, exist_ok=True)
+
+    X, y, y_true = generate_dataset(nonlinear_function)
+
+    model = PolynomialRegression(5)
+    loss_fn = MSELoss()
+
+    epochs = 100
+
+    optimizers = {
+        "SGD": lambda: SGD(lr=0.01, epochs=epochs),
+        "MiniBatch": lambda: MiniBatchGD(lr=0.01, batch_size=4, epochs=epochs),
+        "GaussNewton": lambda: GaussNewton(max_iter=epochs),
+        "LevenbergMarquardt": lambda: LevenbergMarquardt(max_iter=epochs)
+    }
+
+    results = []
+    histories = {}
+
+    Phi = model.design_matrix(X)
+
+    for name, optimizer_factory in optimizers.items():
+        current_model = PolynomialRegression(5)
+        current_model.initialize_weights()
+
+        optimizer = optimizer_factory()
+        start_time = time.perf_counter()
+        current_model, history = optimizer.fit(current_model, loss_fn, Phi, y)
+        elapsed = time.perf_counter() - start_time
+
+        histories[name] = history
+
+        results.append({
+            "optimizer": str(optimizer),
+            "loss": history["loss"][-1],
+            "iterations": len(history["loss"]),
+            "time": elapsed
+        })
+
+    pd.DataFrame(results).to_csv(os.path.join(result_dir, "optimization_comparison.csv"), index=False)
+
+    plt.figure(figsize=(8, 5))
+
+    for name in ["SGD", "MiniBatch"]:
+        if name in histories:
+            plt.plot(histories[name]["loss"], label=name)
+
+    plt.yscale("log")
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid()
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(result_dir, "loss_stochastic.png"))
+    plt.close()
+
+    plt.figure(figsize=(8, 5))
+
+    plt.plot(histories["GaussNewton"]["loss"], label="Gauss-Newton")
+    plt.plot(histories["LevenbergMarquardt"]["loss"], label="Levenberg-Marquardt")
+
+    plt.yscale("log")
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid()
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(result_dir, "gn_vs_lm_loss.png"))
+    plt.close()
+
+    max_len = max(
+        len(histories["GaussNewton"]["loss"]),
+        len(histories["LevenbergMarquardt"]["loss"])
+    )
+
+    rows = []
+
+    for i in range(max_len):
+        rows.append({
+            "iteration": i + 1,
+            "gauss_newton":
+                histories["GaussNewton"]["loss"][i]
+                if i < len(histories["GaussNewton"]["loss"])
+                else np.nan,
+            "levenberg_marquardt":
+                histories["LevenbergMarquardt"]["loss"][i]
+                if i < len(histories["LevenbergMarquardt"]["loss"])
+                else np.nan
+        })
+
+    pd.DataFrame(rows).to_csv(
+        os.path.join(result_dir, "gn_vs_lm_history.csv"),
+        index=False
+    )
+
+
+
+    starts = [
+        ('zeros', np.zeros(model.n_features())),
+        ('ones', np.ones(model.n_features())),
+        ('random', np.random.randn(model.n_features()))
+    ]
+
+    sensitivity = []
+
+    optimizers_best = {
+        "GaussNewton": lambda: GaussNewton(max_iter=100),
+        "LevenbergMarquardt": lambda: LevenbergMarquardt(max_iter=100)
+    }
+
+    for start_id, w0 in starts:
+        for name, optimizer_factory in optimizers_best.items():
+            current_model = PolynomialRegression(5)
+            current_model.weights = w0.copy()
+
+            optimizer = optimizer_factory()
+            current_model, history = optimizer.fit(current_model, loss_fn, Phi, y)
+
+            sensitivity.append({
+                "optimizer": name,
+                "start_point": start_id,
+                "iterations": len(history["loss"]),
+                "final_loss": history["loss"][-1]
+            })
+
+    pd.DataFrame(sensitivity).to_csv(
+        os.path.join(result_dir, "initialization_sensitivity.csv"),
+        index=False
+    )
+
+    print("Task 4 completed.")
 
 
 if __name__ == "__main__":
     # task1()
     # task2()
-    task3()
+    # task3()
     task4()

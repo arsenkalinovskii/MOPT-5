@@ -57,3 +57,6 @@ class MiniBatchGD(BaseOptimizer):
                 break
 
         return model, self.history
+
+    def __str__(self):
+        return self.__class__.__name__ + f"(lr={self.lr},batch_size={self.batch_size})"
