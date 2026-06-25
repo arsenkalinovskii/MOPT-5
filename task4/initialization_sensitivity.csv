@@ -4,4 +4,4 @@ LevenbergMarquardt,zeros,4,0.3108309937154339
 GaussNewton,ones,2,0.3108309937154338
 LevenbergMarquardt,ones,4,0.310830993715434
 GaussNewton,random,2,0.3108309937154339
-LevenbergMarquardt,random,4,0.310830993715434
+LevenbergMarquardt,random,4,0.3108309937154339

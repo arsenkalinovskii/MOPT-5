@@ -1,5 +1,64 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def plot_optimizer_losses(history, optimizer_name, dataset_name, result_dir):
+    plot_loss(
+        history,
+        os.path.join(result_dir, f"loss_{optimizer_name.lower()}_{dataset_name}.png"),
+        title=f"{optimizer_name} ({dataset_name})"
+    )
+
+
+def plot_poly5_regression(model, X, y, optimizer_name, dataset_name, result_dir, y_true=None):
+    plot_regression(
+        model,
+        X,
+        y,
+        os.path.join(result_dir, f"poly5_{dataset_name}_{optimizer_name.lower()}.png"),
+        y_true=y_true,
+        title=f"Poly5 + {optimizer_name} ({dataset_name})"
+    )
+
+
+def plot_best_model(model, X, y, model_name, dataset_name, result_dir, y_true=None):
+    plot_regression(
+        model,
+        X,
+        y,
+        os.path.join(result_dir, f"{model_name}_{dataset_name}_function.png"),
+        y_true=y_true,
+        title=f"{model_name} ({dataset_name})"
+    )
+
+
+def plot_metric_comparison(dataset_df, metric, dataset_name, result_dir):
+    labels = dataset_df["model"] + "\n" + dataset_df["optimizer"]
+
+    plt.figure(figsize=(14, 6))
+    plt.bar(np.arange(len(dataset_df)), dataset_df[metric])
+
+    plt.xticks(np.arange(len(dataset_df)), labels, rotation=90)
+    plt.ylabel(metric.upper())
+    plt.title(f"{metric.upper()} comparison ({dataset_name})")
+
+    min_val = dataset_df[metric].min()
+    max_val = dataset_df[metric].max()
+
+    margin = (max_val - min_val) * 0.1 if max_val > min_val else 0.1
+
+    plt.ylim(min_val - margin, max_val + margin)
+
+    plt.tight_layout()
+
+    plt.savefig(
+        os.path.join(result_dir, f"{metric}_comparison_{dataset_name}.png"),
+        bbox_inches="tight"
+    )
+
+    plt.close()
 
 
 def plot_dataset(X, y, filename, y_true=None, title=None):

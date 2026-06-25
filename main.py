@@ -68,7 +68,7 @@ def task1():
             optimizer_factories = {
                 "Analytic": lambda: AnalyticSolver(),
                 "SGD": lambda: SGD(lr=0.001, epochs=1000),
-                "MiniBatch": lambda: MiniBatchGD(lr=0.001, batch_size=16, epochs=500),
+                "MiniBatch": lambda: MiniBatchGD(lr=0.01, batch_size=16, epochs=500),
                 "GaussNewton": lambda: GaussNewton(max_iter=100),
                 "LevenbergMarquardt": lambda: LevenbergMarquardt(max_iter=100)
             }
@@ -88,26 +88,17 @@ def task1():
                 current_model, history = optimizer.fit(current_model, loss_fn, Phi, y)
 
                 if model_name == "poly5" and optimizer_name != "Analytic":
-                    plot_loss(
-                        history,
-                        os.path.join(
-                            result_dir,
-                            f"loss_{optimizer_name.lower()}_{dataset_name}.png"
-                        ),
-                        title=f"{optimizer_name} ({dataset_name})"
-                    )
+                    plot_optimizer_losses(history, optimizer_name, dataset_name, result_dir)
 
                 if model_name == "poly5":
-                    plot_regression(
+                    plot_poly5_regression(
                         current_model,
                         X,
                         y,
-                        os.path.join(
-                            result_dir,
-                            f"poly5_{dataset_name}_{optimizer_name.lower()}.png"
-                        ),
-                        y_true=y_true,
-                        title=f"Poly5 + {optimizer_name} ({dataset_name})"
+                        optimizer_name,
+                        dataset_name,
+                        result_dir,
+                        y_true
                     )
 
                 elapsed = time.perf_counter() - start_time
@@ -142,43 +133,9 @@ def task1():
 
     for dataset_name in ["linear", "nonlinear"]:
         dataset_df = results_df[results_df["dataset"] == dataset_name].copy()
-        labels = dataset_df["model"] + "\n" + dataset_df["optimizer"]
 
-        plt.figure(figsize=(14, 6))
-        plt.bar(np.arange(len(dataset_df)), dataset_df["loss"])
-        plt.xticks(np.arange(len(dataset_df)), labels, rotation=90)
-        plt.ylabel("Loss")
-        plt.title(f"Loss comparison ({dataset_name})")
-
-        min_val = dataset_df["loss"].min()
-        max_val = dataset_df["loss"].max()
-        margin = (max_val - min_val) * 0.1 if max_val > min_val else 0.1
-        plt.ylim(min_val - margin, max_val + margin)
-
-        plt.tight_layout()
-        plt.savefig(
-            os.path.join(result_dir, f"loss_comparison_{dataset_name}.png"),
-            bbox_inches="tight"
-        )
-        plt.close()
-
-        plt.figure(figsize=(14, 6))
-        plt.bar(np.arange(len(dataset_df)), dataset_df["r2"])
-        plt.xticks(np.arange(len(dataset_df)), labels, rotation=90)
-        plt.ylabel("R2")
-        plt.title(f"R2 comparison ({dataset_name})")
-
-        min_val = dataset_df["r2"].min()
-        max_val = dataset_df["r2"].max()
-        margin = (max_val - min_val) * 0.1 if max_val > min_val else 0.1
-        plt.ylim(min_val - margin, max_val + margin)
-
-        plt.tight_layout()
-        plt.savefig(
-            os.path.join(result_dir, f"r2_comparison_{dataset_name}.png"),
-            bbox_inches="tight"
-        )
-        plt.close()
+        plot_metric_comparison(dataset_df, "loss", dataset_name, result_dir)
+        plot_metric_comparison(dataset_df, "r2", dataset_name, result_dir)
 
     optimizer_summary = (
         results_df
@@ -191,9 +148,7 @@ def task1():
         .round(4)
     )
 
-    optimizer_summary.to_csv(
-        os.path.join(result_dir, "optimizer_summary.csv")
-    )
+    optimizer_summary.to_csv(os.path.join(result_dir, "optimizer_summary.csv"))
 
     summary_df = (
         results_df
@@ -207,10 +162,7 @@ def task1():
         .reset_index()
     )
 
-    summary_df.to_csv(
-        os.path.join(result_dir, "summary.csv"),
-        index=False
-    )
+    summary_df.to_csv(os.path.join(result_dir, "summary.csv"), index=False)
 
     print("Task 1 completed.")
 
@@ -516,8 +468,6 @@ def task4():
         index=False
     )
 
-
-
     starts = [
         ('zeros', np.zeros(model.n_features())),
         ('ones', np.ones(model.n_features())),
@@ -555,7 +505,7 @@ def task4():
 
 
 if __name__ == "__main__":
-    # task1()
-    # task2()
-    # task3()
+    task1()
+    task2()
+    task3()
     task4()
